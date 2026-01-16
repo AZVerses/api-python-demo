@@ -10,7 +10,7 @@ from typing import List, Dict
 logger = logging.getLogger('az_spot')
 
 """
-curl --location --request POST 'http://s-api.myaztests.com/spot/az/spot/order' \
+curl --location --request POST 'http://s-api.azverse.xyz/spot/az/spot/order' \
 --header 'accept: */*' \
 --header 'Content-Type: application/json' \
 --header 'validate-appkey: 626fa1c2-94bf-4559-a3f2-c62897bc392e' \

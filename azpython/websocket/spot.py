@@ -6,7 +6,7 @@ from azpython.websocket.az_websocket import AZWebsocketClient
 class SpotWebsocketStreamClient(AZWebsocketClient):
     def __init__(
             self,
-            stream_url="wss://s-ws.myaztests.com",
+            stream_url="wss://s-ws.azverse.xyz",
             on_message=None,
             on_open=None,
             on_close=None,

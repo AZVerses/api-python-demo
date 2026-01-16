@@ -9,14 +9,14 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 setup(
     name='azpython',
     version='0.1.1',
-    description='Python3 AZ.COM HTTP API Connector',
+    description='Python3 AZX HTTP API Connector',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/selinayiya/api-python-demo",
     download_url='https://github.com/selinayiya/api-python-demo/archive/refs/tags/V0.1.1.tar.gz',
     license="MIT License",
     author="az",
-    author_email="az@az.com",
+    author_email="az@azx.com",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

@@ -3,7 +3,7 @@
 [![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-Official Python3 API connector for AZ.COM's HTTP APIs.
+Official Python3 API connector for AZX's HTTP APIs.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ Official Python3 API connector for AZ.COM's HTTP APIs.
 - [Contact](#contact)
 
 ## About
-Put simply, `azpython` (Python + AZ.COM) is the official lightweight one-stop-shop module for the AZ.COM HTTP APIs. 
+Put simply, `azpython` (Python + AZX) is the official lightweight one-stop-shop module for the AZ.COM HTTP APIs. 
 
 ## Installation
 `azpython` requires Python 3.9.1 or higher. The module can be installed manually or via [PyPI](https://pypi.org/project/azpython/) with `pip`:
@@ -30,10 +30,10 @@ from azpython.spot import Spot
 
 Create an HTTP session and connect via WebSocket for Inverse on mainnet:
 ```python
-az = Spot(host="https://s-api.myaztests.com", access_key='', secret_key='')
+az = Spot(host="https://s-api.azverse.xyz", access_key='', secret_key='')
 ```
 
-Information can be sent to, or retrieved from, the AZ.COM APIs:
+Information can be sent to, or retrieved from, the AZX APIs:
 ```python
 print(az.balance("usdt"))
 ```
@@ -45,10 +45,10 @@ from azpython.perp import Perp
 
 Create an HTTP session and connect via WebSocket for Inverse on mainnet:
 ```python
-az = Perp(host="https://f-api.myaztests.com", access_key='', secret_key='')
+az = Perp(host="https://f-api.azverse.xyz", access_key='', secret_key='')
 ```
 
-Information can be sent to, or retrieved from, the AZ.COM APIs:
+Information can be sent to, or retrieved from, the AZX APIs:
 ```python
 print(az.get_account_capital())
 ```
