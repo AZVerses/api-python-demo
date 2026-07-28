@@ -30,6 +30,6 @@ setup(
     python_requires=">=3.9",
     install_requires=[
         "requests",
-        "websockets"
+        "websocket-client"
     ]
 )

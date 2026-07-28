@@ -125,8 +125,29 @@ class AZSocketManager(threading.Thread):
             self._callback(self.on_pong)
 
     def _handle_data(self, op_code, frame, data):
+        # 700 market-center / accounts-push rebuild:
+        # Push frames are flat JSON text carrying a ``ch`` field (``<type>@<symbol>``)
+        # and short keys, e.g.
+        #   ticker : {"ch":"ticker@btc_usdt","s":..,"o":..,"c":..,"v":<qty>,"uv":<quote>,
+        #             "r":<change rate>,"bp":..,"bq":..,"ap":..,"aq":..,"ix":..,"mx":..,"ts":..}
+        #             (``ix``/``mx`` = index/mark price, futures only)
+        #   depth  : {"ch":"depth@btc_usdt","type":"snapshot"|"delta","u":<seq>,"pu":<prev u>,
+        #             "b":[[price,qty],..],"a":[[price,qty],..],"ts":..}  (qty=="0" removes level)
+        # The subscribe/unsubscribe ack and the heartbeat reply also arrive here as text.
         if op_code == ABNF.OPCODE_TEXT:
             data = frame.data.decode("utf-8")
+            # Heartbeat replies: public market WS answers JSON {"pong":<ts>};
+            # private account WS answers the plain text "pong".
+            if data == "pong":
+                self._callback(self.on_pong, None)
+                return
+            try:
+                obj = json.loads(data)
+            except (ValueError, TypeError):
+                obj = None
+            if isinstance(obj, dict) and "pong" in obj:
+                self._callback(self.on_pong, obj.get("pong"))
+                return
             self._callback(self.on_message, data)
 
     def close(self):
@@ -161,7 +182,12 @@ class AZWebsocketClient:
             on_pong=None,
             timeout=None,
             proxies: Optional[dict] = None,
+            ping_json=True,
     ):
+        # Heartbeat differs by domain (700 rebuild):
+        #   public market WS  -> JSON  {"method":"ping"} -> {"pong":<ts>}   (ping_json=True)
+        #   private account WS -> text "ping" -> "pong"                     (ping_json=False)
+        self._ping_json = ping_json
         self.socket_manager = self._initialize_socket(
             stream_url,
             on_message,
@@ -213,15 +239,18 @@ class AZWebsocketClient:
     def send(self, message: dict):
         self.socket_manager.send_message(json.dumps(message))
 
-    def send_message_to_server(self, message, action=None, id=None, listen_key=None):
+    def send_message_to_server(self, message, action=None, id=None):
         if not id:
             id = get_timestamp()
 
         if action != self.ACTION_UNSUBSCRIBE:
-            return self.subscribe(message, id=id, listen_key=listen_key)
-        return self.unsubscribe(message, id=id, listen_key=listen_key)
+            return self.subscribe(message, id=id)
+        return self.unsubscribe(message, id=id)
 
-    def subscribe(self, stream, id=None, listen_key=None):
+    def subscribe(self, stream, id=None):
+        # 700 rebuild: params are plain channel names (e.g. "ticker@btc_usdt", or
+        # "balance"/"order" for the private account WS). The account is taken from the
+        # handshake token, so there is no more @accountId / @listenKey suffix.
         if not id:
             id = get_timestamp()
         if self._single_stream(stream):
@@ -231,12 +260,10 @@ class AZWebsocketClient:
             "params": stream,
             "id": str(id)
         }
-        if listen_key:
-            mes.update({"listenKey": listen_key})
         json_msg = json.dumps(mes)
         self.socket_manager.send_message(json_msg)
 
-    def unsubscribe(self, stream, id=None, listen_key=None):
+    def unsubscribe(self, stream, id=None):
         if not id:
             id = get_timestamp()
         if self._single_stream(stream):
@@ -247,14 +274,17 @@ class AZWebsocketClient:
             "params": stream,
             "id": str(id)
         }
-        if listen_key:
-            mes.update({"listenKey": listen_key})
         json_msg = json.dumps(mes)
         self.socket_manager.send_message(json_msg)
 
     def ping(self):
         logger.debug("Sending ping to AZ WebSocket Server")
-        self.socket_manager.send_message(message="ping")
+        if self._ping_json:
+            # public market WS heartbeat
+            self.socket_manager.send_message(json.dumps({"method": "ping"}))
+        else:
+            # private account WS heartbeat
+            self.socket_manager.send_message(message="ping")
 
     def heartbeat(self):
         while True:

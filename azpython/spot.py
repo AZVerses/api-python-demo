@@ -18,7 +18,7 @@ curl --location --request POST 'http://s-api.azverse.xyz/spot/az/spot/order' \
 --header 'validate-signature: f24b67d42283feb4b405c59146ecfca4a48f64bccc33c05c33bcc73edad6b4db' \
 --header 'validate-recvwindow: 5000' \
 --header 'validate-algorithms: HmacSHA256' \
---data-raw '{"symbol": "BTC_USDT","clientOrderId": "16559390087220001","side": "BUY","type": "LIMIT","timeInForce": "GTC","bizType": "SPOT","price": 20,"quantity": 0.001}'
+--data-raw '{"symbol": "btc_usdt","clientOrderId": "16559390087220001","side": "BUY","type": "LIMIT","timeInForce": "GTC","bizType": "SPOT","price": 20,"quantity": 0.001}'
 """
 
 
@@ -233,12 +233,13 @@ class Spot:
         :param limit: 数量 默认200 取值1到1000
         :return:[
     {
-      "i": 0,   //ID
-      "t": 0,   //成交时间(time)
-      "p": "string", //成交价(price)
-      "q": "string",  //成交量(quantity)
-      "v": "string",  //成交额(volume)
-      "b": true   //方向(buyerMaker)
+      "i": 0,           //ID
+      "t": 0,           //成交时间(time)
+      "s": "btc_usdt",  //交易对(symbol)
+      "p": "string",    //成交价(price)
+      "a": "string",    //成交量-基础币(quantity, base)
+      "v": "string",    //成交额-计价币(volume, quote)
+      "m": "BID"        //taker方向(taker side): BID 或 ASK
     }
   ]
         """
@@ -257,12 +258,13 @@ class Spot:
         :param from_id: 起始id,eg 6216559590087220004
         :return:[
     {
-      "i": 0,   //ID
-      "t": 0,   //成交时间(time)
-      "p": "string", //成交价(price)
-      "q": "string",  //成交量(quantity)
-      "v": "string",  //成交额(volume)
-      "b": true   //方向(buyerMaker)
+      "i": 0,           //ID
+      "t": 0,           //成交时间(time)
+      "s": "btc_usdt",  //交易对(symbol)
+      "p": "string",    //成交价(price)
+      "a": "string",    //成交量-基础币(quantity, base)
+      "v": "string",    //成交额-计价币(volume, quote)
+      "m": "BID"        //taker方向(taker side): BID 或 ASK
     }
   ]
         """
@@ -284,9 +286,9 @@ class Spot:
         :param symbols:
         :return:    [
             {
-              "s": "btc_usdt",   //交易对(symbol)
-              "p": "9000.0000",   //价格(price)
-              "t": 1661856036925   //时间(time)
+              "s": "btc_usdt",      //交易对(symbol)
+              "ts": 1661856036925,  //时间(time, ms)
+              "p": "9000.0000"      //价格(price)
             }
           ]
         {
@@ -308,11 +310,13 @@ class Spot:
         :param symbols:
         :return:  [
     {
-      "s": "btc_usdt",  //交易对(symbol)
-      "ap": null,  //asks price(卖一价)
-      "aq": null,  //asks qty(卖一量)
-      "bp": null,   //bids price(买一价)
-      "bq": null    //bids qty(买一量)
+      "s": "btc_usdt",          //交易对(symbol)
+      "ts": 1661856036925,      //最后更新时间(last updated time, ms)
+      "u": 137333589606963580,  //撮合簿updateId(matching book updateId)
+      "ap": null,               //asks price(卖一价)
+      "aq": null,               //asks qty(卖一量)
+      "bp": null,               //bids price(买一价)
+      "bq": null                //bids qty(买一量)
     }
   ]
         """
@@ -331,15 +335,16 @@ class Spot:
         :param symbols:
         :return:  [
     {
-      "s": "btc_usdt",   //交易对(symbol)
-      "cv": "0.0000",   //价格变动(change value)
-      "cr": "0.00",     //价格变动百分比(change rate)
-      "o": "9000.0000",   //最早一笔(open)
-      "l": "9000.0000",   //最低(low)
-      "h": "9000.0000",   //最高(high)
-      "c": "9000.0000",   //最后一笔(close)
-      "q": "0.0136",      //成交量(quantity)
-      "v": "122.9940"    //成交额(volume)
+      "s": "btc_usdt",      //交易对(symbol)
+      "ts": 1661856036925,  //时间(time, ms)
+      "cv": "0.0000",       //价格变动(price change value)
+      "r": "0.00",          //价格变动百分比(price change rate)
+      "o": "9000.0000",     //最早一笔(open)
+      "l": "9000.0000",     //最低(low)
+      "h": "9000.0000",     //最高(high)
+      "c": "9000.0000",     //最后一笔(close)
+      "v": "0.0136",        //成交量-基础币(quantity, base)
+      "uv": "122.9940"      //成交额-计价币(amount, quote)
     }
   ]
         """
@@ -471,7 +476,7 @@ class Spot:
   "clientBatchId": "51232",
   "items": [
     {
-      "symbol": "BTC_USDT",
+      "symbol": "btc_usdt",
       "clientOrderId": "16559590087220001",
       "side": "BUY",
       "type": "LIMIT",

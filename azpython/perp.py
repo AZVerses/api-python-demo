@@ -303,6 +303,8 @@ class Perp:
                    client_order_id=None, time_in_force=None, trigger_profit_price=None,
                    trigger_stop_price=None):
         """
+        :param amount: origQty, the real base-coin quantity (post 去张 / de-contract:
+                       it is the coin amount, e.g. 0.01 btc, NOT a number of contracts/张)
         :return: send order
         """
         params = {

@@ -53,6 +53,40 @@ Information can be sent to, or retrieved from, the AZX APIs:
 print(az.get_account_capital())
 ```
 
+## Hosts & endpoints
+
+REST hosts (the `/az` path prefix is kept — do NOT drop it):
+
+| Domain | REST host | Signed path prefix |
+| ------ | --------- | ------------------ |
+| Spot   | `https://s-api.azverse.xyz` | `/az/spot/...` |
+| Future | `https://f-api.azverse.xyz` | `/az/future/...` |
+
+Requests are signed with the `validate-*` HMAC-SHA256 headers (unchanged).
+
+WebSocket endpoints (700 rebuild, base `wss://s-ws.azverse.xyz` / `wss://f-ws.azverse.xyz`):
+
+| Domain | Public market | Private account |
+| ------ | ------------- | --------------- |
+| Spot   | `/spot/public` | `/ws/account/spot` |
+| Future | `/futures/public` | `/ws/account/futures` |
+
+* Public market: subscribe with plain channels (`ticker@btc_usdt`, `depth@btc_usdt`,
+  `depth20@btc_usdt`, `kline_1m@btc_usdt`, `deal@btc_usdt`, `tickers`, `fundrate@btc_usdt`, ...);
+  heartbeat is JSON `{"method":"ping"}` -> `{"pong":<ts>}`. Push frames are flat and carry a
+  `ch` field with short keys (`v`/`uv`/`bp`/`bq`/`ap`/`aq`/`ix`/`mx`, depth `u`/`pu`).
+* Private account: there is no more `listenKey` — carry the login token **on the handshake**
+  (`?token=<token>`; fetch the spot token via `POST /az/spot/ws-token`). The account comes from
+  the token, so channels are plain names (`balance`, `order`, `trade`, `position`, `notify`, ...);
+  heartbeat is text `ping` -> `pong`.
+* Symbols are lowercase underscore, e.g. `btc_usdt`.
+
+```python
+from azpython.websocket.spot import SpotWebsocketStreamClient
+client = SpotWebsocketStreamClient(is_auth=True, token="<accessToken>")
+client.user_balance(action=SpotWebsocketStreamClient.ACTION_SUBSCRIBE)
+```
+
 ## Examples
 You can find more examples in the project folder /examples/
 
