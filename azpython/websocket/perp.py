@@ -78,8 +78,10 @@ class PerpWebsocketStreamClient(AZWebsocketClient):
     def depth(self, symbol: str, level=20, id=None, action=None):
         """
         Limited depth (full top-N snapshot, whole-book replace)
-        levels: 20, 50, 100
+        levels: 5, 10, 20, 50, 100
         Stream Names: depth{level}@{symbol}
+        Frame: {"ch":"depth","event":"depth{level}@{symbol}",
+                "data":{"id":<updateId str>,"s":..,"a":[..],"b":[..],"t":..}}
         Update Speed: Real-time
         """
         stream_name = "depth{}@{}".format(level, symbol.lower())
@@ -123,7 +125,8 @@ class PerpWebsocketStreamClient(AZWebsocketClient):
     def index_price(self, symbol, id=None, action=None):
         """
         Stream Name: index_price@{symbol}
-        (keeps the legacy {topic,event,data} envelope, not a flat ch frame)
+        Frame: {"ch":"index_price","event":"index_price@{symbol}","data":{"s":..,"p":<price>,"t":..}}
+               (unified {ch,event,data} envelope, same as every other channel)
         Update Speed: 1000ms
         """
         stream_name = "index_price@{}".format(symbol.lower())
@@ -132,7 +135,8 @@ class PerpWebsocketStreamClient(AZWebsocketClient):
     def mark_price(self, symbol, id=None, action=None):
         """
         Stream Name: mark_price@{symbol}
-        (keeps the legacy {topic,event,data} envelope, not a flat ch frame)
+        Frame: {"ch":"mark_price","event":"mark_price@{symbol}","data":{"s":..,"p":<price>,"t":..}}
+               (unified {ch,event,data} envelope, same as every other channel)
         Update Speed: 1000ms
         """
         stream_name = "mark_price@{}".format(symbol.lower())
@@ -141,9 +145,21 @@ class PerpWebsocketStreamClient(AZWebsocketClient):
     def fund_rate(self, symbol, id=None, action=None):
         """
         Stream Name: fundrate@{symbol}
+        Frame: {"ch":"fundrate","event":"fundrate@{symbol}","data":{"s":..,"r":<rate>,"t":..,"nt":<next>}}
         Update Speed: 60s
         """
         stream_name = "fundrate@{}".format(symbol.lower())
+        self.send_message_to_server(stream_name, action=action, id=id)
+
+    def best_price(self, symbol, id=None, action=None):
+        """
+        Best bid/ask streamed directly from the matching engine.
+        Stream Name: best_price@{symbol}
+        Frame: {"ch":"best_price","event":"best_price@{symbol}",
+                "data":{"s":..,"a":<ask price>,"aa":<ask qty>,"b":<bid price>,"ba":<bid qty>,"t":..}}
+        Update Speed: Real-time
+        """
+        stream_name = "best_price@{}".format(symbol.lower())
         self.send_message_to_server(stream_name, action=action, id=id)
 
     # -------------------- private account channels --------------------

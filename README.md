@@ -72,9 +72,14 @@ WebSocket endpoints (700 rebuild, base `wss://s-ws.azverse.xyz` / `wss://f-ws.az
 | Future | `/futures/public` | `/ws/account/futures` |
 
 * Public market: subscribe with plain channels (`ticker@btc_usdt`, `depth@btc_usdt`,
-  `depth20@btc_usdt`, `kline_1m@btc_usdt`, `deal@btc_usdt`, `tickers`, `fundrate@btc_usdt`, ...);
-  heartbeat is JSON `{"method":"ping"}` -> `{"pong":<ts>}`. Push frames are flat and carry a
-  `ch` field with short keys (`v`/`uv`/`bp`/`bq`/`ap`/`aq`/`ix`/`mx`, depth `u`/`pu`).
+  `depth5@btc_usdt` (levels 5/10/20/50/100), `kline_1m@btc_usdt`, `deal@btc_usdt`, `tickers`,
+  `best_price@btc_usdt`, `fundrate@btc_usdt`, `index_price@`/`mark_price@` (futures),
+  `pred_ticker@`/`pred_tickers` (spot), ...). The ack is `{"id":..,"code":200,"msg":"success"}`
+  (`code` 400/429 with a token `msg` on failure). Heartbeat is text `ping` → `pong` or JSON
+  `{"method":"ping"}` → `{"pong":<ts>}`. **Every push frame is the unified envelope**
+  `{"ch":<family>,"event":<subscription string>,"data":<obj|array>}` with short `data` keys
+  (`v`/`uv`/`bp`/`bq`/`ap`/`aq`/`ix`/`mx`; full depth `ch:"depth_update"` with `u`/`pu`;
+  fixed-level `ch:"depth"` with string `data.id`).
 * Private account: there is no more `listenKey` — carry the login token **on the handshake**
   (`?token=<token>`; fetch the spot token via `POST /az/spot/ws-token`). The account comes from
   the token, so channels are plain names (`balance`, `order`, `trade`, `position`, `notify`, ...);

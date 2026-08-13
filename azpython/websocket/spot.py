@@ -77,11 +77,41 @@ class SpotWebsocketStreamClient(AZWebsocketClient):
     def limit_depth(self, symbol: str, level=20, id=None, action=None):
         """
         Limited depth (full top-N snapshot, whole-book replace)
-        levels: 20, 50, 100
+        levels: 5, 10, 20, 50, 100
         Stream Names: depth{level}@{symbol}
+        Frame: {"ch":"depth","event":"depth{level}@{symbol}",
+                "data":{"id":<updateId str>,"s":..,"a":[..],"b":[..],"t":..}}
         Update Speed: Real-time
         """
         self.send_message_to_server("depth{}@{}".format(level, symbol.lower()), id=id, action=action)
+
+    def best_price(self, symbol: str, id=None, action=None):
+        """
+        Best bid/ask streamed directly from the matching engine.
+        Stream Name: best_price@{symbol}
+        Frame: {"ch":"best_price","event":"best_price@{symbol}",
+                "data":{"s":..,"a":<ask price>,"aa":<ask qty>,"b":<bid price>,"ba":<bid qty>,"t":..}}
+        Update Speed: Real-time
+        """
+        self.send_message_to_server("best_price@{}".format(symbol.lower()), id=id, action=action)
+
+    def pred_ticker(self, symbol: str, id=None, action=None):
+        """
+        Prediction-market ticker (only valid for prediction-market symbols).
+        Stream Name: pred_ticker@{symbol}
+        Frame: {"ch":"pred_ticker","event":"pred_ticker@{symbol}",
+                "data":{"s":..,"bp":<bid1>,"ap":<ask1>,"c":<last>}}
+        Update Speed: Real-time
+        """
+        self.send_message_to_server("pred_ticker@{}".format(symbol.lower()), id=id, action=action)
+
+    def all_pred_ticker(self, id=None, action=None):
+        """
+        Stream Name: pred_tickers (batch snapshot of all prediction-market symbols, no @symbol suffix)
+        Frame: {"ch":"pred_tickers","event":"pred_tickers","data":[{"s":..,"bp":..,"ap":..,"c":..}, ..]}
+        Update Speed: ~3s
+        """
+        self.send_message_to_server("pred_tickers", id=id, action=action)
 
     def incremental_depth(self, symbol: str, id=None, action=None):
         """

@@ -126,14 +126,20 @@ class AZSocketManager(threading.Thread):
 
     def _handle_data(self, op_code, frame, data):
         # 700 market-center / accounts-push rebuild:
-        # Push frames are flat JSON text carrying a ``ch`` field (``<type>@<symbol>``)
-        # and short keys, e.g.
-        #   ticker : {"ch":"ticker@btc_usdt","s":..,"o":..,"c":..,"v":<qty>,"uv":<quote>,
-        #             "r":<change rate>,"bp":..,"bq":..,"ap":..,"aq":..,"ix":..,"mx":..,"ts":..}
-        #             (``ix``/``mx`` = index/mark price, futures only)
-        #   depth  : {"ch":"depth@btc_usdt","type":"snapshot"|"delta","u":<seq>,"pu":<prev u>,
-        #             "b":[[price,qty],..],"a":[[price,qty],..],"ts":..}  (qty=="0" removes level)
-        # The subscribe/unsubscribe ack and the heartbeat reply also arrive here as text.
+        # Every push frame is the unified envelope ``{ch, event, data}`` — ``ch`` is the
+        # channel family (dispatch key: same ch => same data shape), ``event`` is the
+        # normalized subscription string, ``data`` is an object (single symbol) or an
+        # array (batch channels like ``tickers``). e.g.
+        #   ticker : {"ch":"ticker","event":"ticker@btc_usdt","data":{"s":..,"o":..,"c":..,
+        #             "v":<qty>,"uv":<quote>,"r":<rate>,"bp":..,"bq":..,"ap":..,"aq":..,
+        #             "ix":..,"mx":..,"ts":..}}   (``ix``/``mx`` = index/mark price, futures only)
+        #   depth  : {"ch":"depth_update","event":"depth@btc_usdt","data":{"s":..,
+        #             "type":"snapshot"|"delta","u":<seq>,"pu":<prev u>,
+        #             "b":[[price,qty],..],"a":[[price,qty],..],"ts":..}}  (qty=="0" removes level)
+        #   depthN : {"ch":"depth","event":"depth5@btc_usdt","data":{"id":"<updateId str>",
+        #             "s":..,"a":[..],"b":[..],"t":..}}   (full top-N replace, no type)
+        # The subscribe/unsubscribe ack ``{"id":..,"code":200|400|429,"msg":..}`` and the
+        # heartbeat reply also arrive here as text.
         if op_code == ABNF.OPCODE_TEXT:
             data = frame.data.decode("utf-8")
             # Heartbeat replies: public market WS answers JSON {"pong":<ts>};
